@@ -1,0 +1,77 @@
+steps:
+  # Restore last-known download count from cache
+  - name: Restore download count cache
+    uses: actions/cache/restore@v4
+    with:
+      path: ~/.cf-cache
+      key: cf-downloads-
+      restore-keys: |
+        cf-downloads-
+
+  - name: Check downloads and notify Slack
+    env:
+      CF_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      CF_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    run: |
+      set -e
+
+      RESPONSE=$(curl -s -f \
+        -H "x-api-key: ${CF_API_KEY}" \
+        "https://api.curseforge.com/v1/mods/${CF_PROJECT_ID}")
+
+      CURRENT_DOWNLOADS=$(echo "$RESPONSE" | jq '.data.downloadCount')
+      PROJECT_NAME=$(echo "$RESPONSE" | jq -r '.data.name')
+      PROJECT_URL=$(echo "$RESPONSE" | jq -r '.data.links.websiteUrl')
+
+      echo "Project: $PROJECT_NAME"
+      echo "Current downloads: $CURRENT_DOWNLOADS"
+
+      CACHE_FILE="${HOME}/.cf-cache/last_count.txt"
+      mkdir -p "${HOME}/.cf-cache"
+
+      LAST_DOWNLOADS=""
+      if [ -f "$CACHE_FILE" ]; then
+        LAST_DOWNLOADS=$(cat "$CACHE_FILE")
+      fi
+
+      echo "Last known downloads: ${LAST_DOWNLOADS:-none}"
+      echo "$CURRENT_DOWNLOADS" > "$CACHE_FILE"
+
+      if [ -z "$LAST_DOWNLOADS" ]; then
+        echo "First run — saving baseline. No notification sent."
+        exit 0
+      fi
+
+      NEW_DOWNLOADS=$((CURRENT_DOWNLOADS - LAST_DOWNLOADS))
+
+      if [ "$NEW_DOWNLOADS" -gt 0 ]; then
+        echo "New downloads detected: $NEW_DOWNLOADS"
+
+        curl -s -f -X POST "$SLACK_WEBHOOK_URL" \
+          -H 'Content-Type: application/json' \
+          -d @- <<EOF
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ":arrow_down: *${NEW_DOWNLOADS} new download(s)* for <${PROJECT_URL}|${PROJECT_NAME}>!\n\n*Total downloads:* ${CURRENT_DOWNLOADS}"
+            }
+          }
+        ]
+      }
+      EOF
+
+        echo "Slack notification sent."
+      else
+        echo "No new downloads since last check."
+      fi
+
+  # Save updated count to cache
+  - name: Save download count cache
+    uses: actions/cache/save@v4
+    with:
+      path: ~/.cf-cache
+      key: cf-downloads-${{ github.run_id }}
