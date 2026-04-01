@@ -2,7 +2,7 @@ name: CurseForge Download Notifier
 
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "20 * * * *"
   workflow_dispatch:
 
 permissions:
