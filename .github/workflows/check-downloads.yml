@@ -5,6 +5,10 @@ on:
     - cron: "*/30 * * * *"
   workflow_dispatch:
 
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   check-downloads:
     runs-on: ubuntu-latest
