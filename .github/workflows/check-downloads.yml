@@ -2,7 +2,7 @@ name: CurseForge Download Notifier
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           name: cf-download-count
-          path: ~/.cf-cache
+          path: /home/runner/.cf-cache
           search_artifacts: true
           if_no_artifact_found: warn
         continue-on-error: true
@@ -43,8 +43,8 @@ jobs:
           echo "Project: $PROJECT_NAME"
           echo "Current downloads: $CURRENT_DOWNLOADS"
 
-          CACHE_FILE="${HOME}/.cf-cache/last_count.txt"
-          mkdir -p "${HOME}/.cf-cache"
+          CACHE_FILE="/home/runner/.cf-cache/last_count.txt"
+          mkdir -p "/home/runner/.cf-cache"
 
           LAST_DOWNLOADS=""
           if [ -f "$CACHE_FILE" ]; then
@@ -89,5 +89,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cf-download-count
-          path: ~/.cf-cache/last_count.txt
+          path: /home/runner/.cf-cache/last_count.txt
           overwrite: true
