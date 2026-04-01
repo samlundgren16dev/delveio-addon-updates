@@ -2,7 +2,7 @@ name: CurseForge Download Notifier
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -61,7 +61,7 @@ jobs:
 
           NEW_DOWNLOADS=$((CURRENT_DOWNLOADS - LAST_DOWNLOADS))
 
-          if [ "$NEW_DOWNLOADS" -ge 0 ]; then
+          if [ "$NEW_DOWNLOADS" -gt 0 ]; then
             echo "New downloads detected: $NEW_DOWNLOADS"
 
             curl -s -f -X POST "$SLACK_WEBHOOK_URL" \
