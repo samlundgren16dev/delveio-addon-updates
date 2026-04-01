@@ -10,13 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Restore download count cache
-        uses: actions/cache/restore@v4
+      - name: Download previous count
+        id: restore
+        uses: dawidd6/action-download-artifact@v6
         with:
+          name: cf-download-count
           path: ~/.cf-cache
-          key: cf-downloads-
-          restore-keys: |
-            cf-downloads-
+          search_artifacts: true
+          if_no_artifact_found: warn
+        continue-on-error: true
 
       - name: Check downloads and notify Slack
         env:
@@ -79,8 +81,9 @@ jobs:
             echo "No new downloads since last check."
           fi
 
-      - name: Save download count cache
-        uses: actions/cache/save@v4
+      - name: Save current count
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.cf-cache
-          key: cf-downloads-${{ github.run_id }}
+          name: cf-download-count
+          path: ~/.cf-cache/last_count.txt
+          overwrite: true
