@@ -55,7 +55,7 @@ jobs:
           echo "$CURRENT_DOWNLOADS" > "$CACHE_FILE"
 
           if [ -z "$LAST_DOWNLOADS" ]; then
-            echo "First run — saving baseline. No notification sent."
+            echo "First run: saving baseline. No notification sent."
             exit 0
           fi
 
